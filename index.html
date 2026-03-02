@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>石头剪刀布</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.3rem;
+      letter-spacing: 2px;
+      text-shadow: 0 0 20px rgba(100, 200, 255, 0.5);
+    }
+
+    .subtitle {
+      color: #8ab4f8;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+    }
+
+    /* 计分板 */
+    .scoreboard {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .score-card {
+      text-align: center;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 0.8rem 1.5rem;
+      min-width: 90px;
+    }
+
+    .score-card .label {
+      font-size: 0.75rem;
+      color: #8ab4f8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .score-card .value {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-top: 2px;
+    }
+
+    .score-card.player .value { color: #4ade80; }
+    .score-card.tie .value    { color: #facc15; }
+    .score-card.computer .value { color: #f87171; }
+
+    /* 对战区 */
+    .arena {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .side {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      width: 120px;
+    }
+
+    .side .name {
+      font-size: 0.8rem;
+      color: #8ab4f8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .display-choice {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.15);
+      transition: all 0.3s ease;
+    }
+
+    .vs {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #8ab4f8;
+    }
+
+    /* 结果消息 */
+    .result-msg {
+      font-size: 1.4rem;
+      font-weight: bold;
+      min-height: 2rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .result-msg.win  { color: #4ade80; text-shadow: 0 0 15px rgba(74,222,128,0.6); }
+    .result-msg.lose { color: #f87171; text-shadow: 0 0 15px rgba(248,113,113,0.6); }
+    .result-msg.tie  { color: #facc15; text-shadow: 0 0 15px rgba(250,204,21,0.6); }
+
+    /* 选择按钮 */
+    .choices {
+      display: flex;
+      gap: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .choice-btn {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.07);
+      font-size: 2.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      position: relative;
+    }
+
+    .choice-btn span.hint {
+      font-size: 0.55rem;
+      color: #8ab4f8;
+      letter-spacing: 0.5px;
+    }
+
+    .choice-btn:hover {
+      transform: translateY(-6px) scale(1.08);
+      background: rgba(255,255,255,0.15);
+      border-color: rgba(100,200,255,0.6);
+      box-shadow: 0 8px 25px rgba(100,200,255,0.3);
+    }
+
+    .choice-btn:active {
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    /* 重置按钮 */
+    .reset-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #8ab4f8;
+      padding: 0.5rem 1.5rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      transition: all 0.2s ease;
+    }
+
+    .reset-btn:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.5);
+      color: #fff;
+    }
+
+    /* 动画 */
+    @keyframes pop {
+      0%   { transform: scale(0.5); opacity: 0; }
+      70%  { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .pop { animation: pop 0.35s ease forwards; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25%       { transform: translateX(-6px); }
+      75%       { transform: translateX(6px); }
+    }
+
+    .shake { animation: shake 0.4s ease; }
+  </style>
+</head>
+<body>
+
+  <h1>石头 剪刀 布</h1>
+  <p class="subtitle">Rock · Paper · Scissors</p>
+
+  <div class="scoreboard">
+    <div class="score-card player">
+      <div class="label">你</div>
+      <div class="value" id="score-player">0</div>
+    </div>
+    <div class="score-card tie">
+      <div class="label">平局</div>
+      <div class="value" id="score-tie">0</div>
+    </div>
+    <div class="score-card computer">
+      <div class="label">电脑</div>
+      <div class="value" id="score-computer">0</div>
+    </div>
+  </div>
+
+  <div class="arena">
+    <div class="side">
+      <div class="name">你</div>
+      <div class="display-choice" id="player-display">🤔</div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="side">
+      <div class="name">电脑</div>
+      <div class="display-choice" id="computer-display">🤖</div>
+    </div>
+  </div>
+
+  <div class="result-msg" id="result-msg">选择你的出招！</div>
+
+  <div class="choices">
+    <button class="choice-btn" onclick="play('rock')" title="石头">
+      🪨<span class="hint">石头</span>
+    </button>
+    <button class="choice-btn" onclick="play('scissors')" title="剪刀">
+      ✂️<span class="hint">剪刀</span>
+    </button>
+    <button class="choice-btn" onclick="play('paper')" title="布">
+      📄<span class="hint">布</span>
+    </button>
+  </div>
+
+  <button class="reset-btn" onclick="resetScore()">重置分数</button>
+
+  <script>
+    const CHOICES = ['rock', 'scissors', 'paper'];
+    const EMOJI = { rock: '🪨', scissors: '✂️', paper: '📄' };
+    const NAME  = { rock: '石头', scissors: '剪刀', paper: '布' };
+
+    // wins[a] contains what a beats
+    const BEATS = { rock: 'scissors', scissors: 'paper', paper: 'rock' };
+
+    let scores = { player: 0, tie: 0, computer: 0 };
+
+    function play(playerChoice) {
+      const cpuChoice = CHOICES[Math.floor(Math.random() * 3)];
+
+      // 更新显示
+      setDisplay('player-display', EMOJI[playerChoice]);
+      setDisplay('computer-display', EMOJI[cpuChoice]);
+
+      // 判断胜负
+      const msg = document.getElementById('result-msg');
+      msg.className = 'result-msg';
+
+      if (playerChoice === cpuChoice) {
+        scores.tie++;
+        msg.textContent = '🤝 平局！势均力敌';
+        msg.classList.add('tie');
+      } else if (BEATS[playerChoice] === cpuChoice) {
+        scores.player++;
+        msg.textContent = `🎉 你赢了！${NAME[playerChoice]} 胜 ${NAME[cpuChoice]}`;
+        msg.classList.add('win');
+      } else {
+        scores.computer++;
+        msg.textContent = `😞 你输了！${NAME[cpuChoice]} 胜 ${NAME[playerChoice]}`;
+        msg.classList.add('lose');
+        document.getElementById('player-display').classList.add('shake');
+        setTimeout(() => document.getElementById('player-display').classList.remove('shake'), 400);
+      }
+
+      updateScoreboard();
+    }
+
+    function setDisplay(id, emoji) {
+      const el = document.getElementById(id);
+      el.textContent = emoji;
+      el.classList.remove('pop');
+      void el.offsetWidth; // reflow
+      el.classList.add('pop');
+    }
+
+    function updateScoreboard() {
+      document.getElementById('score-player').textContent   = scores.player;
+      document.getElementById('score-tie').textContent      = scores.tie;
+      document.getElementById('score-computer').textContent = scores.computer;
+    }
+
+    function resetScore() {
+      scores = { player: 0, tie: 0, computer: 0 };
+      updateScoreboard();
+      document.getElementById('player-display').textContent   = '🤔';
+      document.getElementById('computer-display').textContent = '🤖';
+      const msg = document.getElementById('result-msg');
+      msg.className = 'result-msg';
+      msg.textContent = '选择你的出招！';
+    }
+  </script>
+</body>
+</html>
